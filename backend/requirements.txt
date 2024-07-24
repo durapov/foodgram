@@ -1,0 +1,6 @@
+Django
+djangorestframework
+djoser
+python-dotenv
+djangorestframework-simplejwt
+django-filter
