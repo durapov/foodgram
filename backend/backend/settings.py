@@ -146,18 +146,18 @@ MEDIA_ROOT = BASE_DIR / ('media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# DJOSER = {
-#     'LOGIN_FIELD': 'email',
-#     'HIDE_USERS': False,
-#     'SERIALIZERS': {
-#         'user': 'recipes.serializers.UserSerializer',
-#         'current_user': 'recipes.serializers.UserSerializer',
-#     },
-#     # 'PERMISSIONS': {
-#     #     'user_list': ['rest_framework.permissions.AllowAny'],
-#     #     'user': ['rest_framework.permissions.AllowAny'],
-#     # }
-# }
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'HIDE_USERS': False,
+    'SERIALIZERS': {
+        'user': 'recipes.serializers.UserSerializer',
+        'current_user': 'recipes.serializers.UserSerializer',
+    },
+    # 'PERMISSIONS': {
+    #     'user_list': ['rest_framework.permissions.AllowAny'],
+    #     'user': ['rest_framework.permissions.AllowAny'],
+    # }
+}
 
 
 

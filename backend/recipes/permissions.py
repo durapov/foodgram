@@ -1,5 +1,6 @@
 #
 from rest_framework.permissions import SAFE_METHODS, BasePermission
+from rest_framework import decorators, generics, permissions, mixins, viewsets
 
 
 class IsAdmin(BasePermission):
@@ -36,3 +37,23 @@ class IsAuthorOrReadOnly(BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return request.method in SAFE_METHODS or obj.author == request.user
+
+
+
+class MixedPermission:
+    """Миксин permissions для action"""
+    def get_permissions(self):
+        try:
+            return [permission() for permission in self.permission_classes_by_action[self.action]]
+        except KeyError:
+            return [permission() for permission in self.permission_classes]
+
+class CreateUpdateDestroyDS(mixins.CreateModelMixin,
+                            mixins.UpdateModelMixin,
+                            mixins.DestroyModelMixin,
+                            MixedPermission,
+                            viewsets.GenericViewSet):
+    """"""
+    pass
+
+

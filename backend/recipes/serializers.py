@@ -12,7 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
         max_length=MAX_NAME_LENGTH,
         validators=[username_validator]
     )
-    is_subscribed = serializers.SerializerMethodField()
+    # is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User

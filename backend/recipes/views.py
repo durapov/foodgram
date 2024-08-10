@@ -24,9 +24,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-
 from .filterset import RecipeFilter
-from .permissions import IsAdmin, IsAdminOrReadOnly, IsModerator
+from .permissions import IsAdmin, IsAdminOrReadOnly, IsModerator, MixedPermission, CreateUpdateDestroyDS
 #########
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -41,7 +40,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         methods=('GET', 'PATCH'),
-        detail=False,
+        detail=False, #True - 1 object, False - list objects
         permission_classes=(IsAuthenticated,),
     )
     def me(self, request):
@@ -77,18 +76,24 @@ class UserViewSet(viewsets.ModelViewSet):
 #         recipe = get_object_or_404(Recipe, id=recipe_id)
 #         serializer.save(author=self.request.user, title=recipe)
 
+
+# class RecipeViewSet(viewsets.ModelViewSet):
+#     queryset = Recipe.objects.all()
+#     serializer_class = RecipeSerializer
+#     permission_classes = (IsModerator,)
+
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeSerializer
     permission_classes = (IsModerator,)
 
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (IsAdminOrReadOnly,)
 
 
-class IngredientViewSet(viewsets.ModelViewSet):
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (IsAdminOrReadOnly,)
