@@ -1,11 +1,10 @@
 from datetime import timezone
-
+from django.core.exceptions import BadRequest
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser, PermissionsMixin
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import RegexValidator, MinValueValidator
 from django.db import models
-
 from backend.constants import MAX_NAME_LENGTH, MAX_EMAIL_LENGTH
 ######
 from django.contrib import admin
@@ -16,11 +15,11 @@ from django.db import models
 
 STRING_LENGTH = 20
 
-class User(AbstractUser):
+class ApiUser(AbstractUser):
 
     ROLES = (('admin', 'Администратор'), ('moderator', 'Модератор'),
              ('user', 'Пользователь'),)
-    REQUIRED_FIELDS = ('username', 'last_name', 'first_name',)
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name',)
     USERNAME_FIELD = 'email'
 
     email = models.EmailField(
@@ -45,6 +44,16 @@ class User(AbstractUser):
         verbose_name='Фамилия',
         max_length=MAX_NAME_LENGTH,
     )
+    is_subscribed = models.BooleanField(
+        verbose_name='Подписка на пользователя',
+        default = False
+
+    )
+    avatar = models.URLField(
+        verbose_name='Аватар',
+    )
+
+
     role = models.CharField(max_length=30, verbose_name='роль',
                             choices=ROLES, default='user')
 
@@ -52,6 +61,7 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
         ordering = ('id',)
+        # fields = ('email', 'id', 'username', 'first_name', 'lastname', 'is_subscribed', 'avatar')
 
     def __str__(self):
         return self.username
@@ -79,7 +89,7 @@ class Recipe(models.Model):
     #     related_name='tags'
     # )
     author = models.ForeignKey(
-        User,
+        ApiUser,
         on_delete=models.CASCADE,
         related_name='recipe_author',
         null=True, blank=True
@@ -119,7 +129,7 @@ class Tag(models.Model):
         ]
     )
     author = models.ForeignKey(
-        User,
+        ApiUser,
         on_delete=models.CASCADE,
         related_name='tag_author',
         null=True, blank=True
@@ -171,7 +181,7 @@ class ShopingCart(models.Model):
         verbose_name='Рецепт'
     )
     user = models.ForeignKey(
-        User,
+        ApiUser,
         related_name='user_in_cart',
         on_delete=models.CASCADE,
         verbose_name='Пользователь'
@@ -183,9 +193,36 @@ class ShopingCart(models.Model):
 
 
 class Subscription(models.Model):
+
+    subscriber = models.ForeignKey(
+        ApiUser,
+        related_name='subscriber',
+        verbose_name='Подписчик',
+        on_delete=models.CASCADE,
+    )
+
+    author = models.ForeignKey(
+        ApiUser,
+        related_name="author",
+        verbose_name="Автор рецепта",
+        on_delete=models.CASCADE,
+    )
     class Meta:
         verbose_name = 'Подписка на пользователя'
         verbose_name_plural = 'Подписки на пользователей'
+        ordering = ('subscriber', 'author')
+        constraints = [models.UniqueConstraint(
+            fields=['subscriber', 'author'],
+            name='subscription_unique'
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.subscriber} подписан на {self.author}"
+
+    def clean(self):
+        if self.subscriber == self.author:
+            raise BadRequest('На себя не подписаться')
 
 class Favorite(models.Model):
     class Meta:

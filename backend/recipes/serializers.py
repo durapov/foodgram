@@ -1,32 +1,60 @@
 from rest_framework import serializers, generics
-
-from .models import Recipe, Ingredient, Tag, IngredientInRecipe, User, ShopingCart, Favorite, Subscription  # , User
+from djoser.serializers import UserCreateSerializer, UserSerializer
+from .models import Recipe, Ingredient, Tag, IngredientInRecipe, ApiUser, ShopingCart, Favorite, Subscription  # , User
 from .validators import username_validator
 from backend.constants import MAX_NAME_LENGTH
 
 
-class UserSerializer(serializers.ModelSerializer):
+
+class ApiUserCreateSerializer(UserCreateSerializer):
     """Сериализатор для модели User"""
+
+    class Meta(UserCreateSerializer.Meta):
+        model = ApiUser
+        fields = (
+            "username",
+            "first_name",
+            "last_name",
+            "email",
+            "password"
+        )
+class ApiUserSerializer(UserSerializer):
+    """Сериализатор для модели ApiUser"""
 
     username = serializers.CharField(
         max_length=MAX_NAME_LENGTH,
-        validators=[username_validator]
+#        validators=[username_validator]
     )
     # is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
-        model = User
+        model = ApiUser
         fields = (
             'email',
             'id',
             'username',
             'first_name',
-            'last_name'
-#            'is_subscribed'
+            'last_name',
+            'is_subscribed',
+            'avatar'
         )
 
 
-class UserMeRoleSerializer(UserSerializer):
+class ApiUserListSerializer(UserSerializer):
+    class Meta:
+        model = ApiUser
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            #            'avatar'
+        )
+
+
+class UserMeRoleSerializer(ApiUserSerializer):
     role = serializers.CharField()
 
 

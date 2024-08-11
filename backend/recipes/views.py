@@ -1,15 +1,16 @@
 from datetime import timezone
 from rest_framework.exceptions import NotFound
 from django.shortcuts import render
-from djoser.serializers import UserSerializer
+# from djoser.serializers import ApiUserSerializer
 from rest_framework import viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
 from djoser import views as djoser_views
-from .models import Recipe, Tag, Ingredient, IngredientInRecipe, User  # , User
-from .serializers import (RecipeSerializer, TagSerializer,
-                          IngredientSerializer, IngredientInRecipeSerializer, UserMeRoleSerializer, )
+from .models import Recipe, Tag, Ingredient, IngredientInRecipe, ApiUser, Subscription
+from .serializers import (RecipeSerializer, TagSerializer, ApiUserSerializer,
+                          IngredientSerializer, IngredientInRecipeSerializer,
+                          UserMeRoleSerializer, SubscriptionSerializer)
 
-
+from djoser.views import UserViewSet
 from uuid import uuid4
 
 from django.contrib.auth.tokens import default_token_generator
@@ -24,39 +25,96 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .filterset import RecipeFilter
+from .filterset import IngredientFilter, RecipeFilter
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsModerator, MixedPermission, CreateUpdateDestroyDS
+
+
 #########
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-    pagination_class = PageNumberPagination
-    permission_classes = (IsAdmin,)
-    http_method_names = ['get', 'post', 'patch', 'delete']
-    lookup_field = 'username'
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ('username',)
+
+
+class ApiUserViewSet(UserViewSet):
+    queryset = ApiUser.objects.all()
+    serializer_class = ApiUserSerializer
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [IsModerator()]
+        return super().get_permissions()
 
     @action(
-        methods=('GET', 'PATCH'),
-        detail=False, #True - 1 object, False - list objects
-        permission_classes=(IsAuthenticated,),
+        detail=True,
+        methods=["post", "delete"],
+        permission_classes=[IsAuthenticated]
     )
-    def me(self, request):
-        if request.method == 'GET':
-            serializer = UserSerializer(request.user)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        elif request.method == 'PATCH':
-            serializer = UserMeRoleSerializer(
-                request.user,
-                data=request.data,
-                partial=True
+    def subscribe(self, request, **kwargs):
+        user = request.user
+        author_id = self.kwargs.get("id")
+        author = get_object_or_404(ApiUser, id=author_id)
+
+        if request.method == "POST":
+            serializer = SubscriptionSerializer(
+                author, data=request.data, context={"request": request}
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data,
-                            status=status.HTTP_200_OK)
+            Subscription.objects.create(user=user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == "DELETE":
+            subscription = get_object_or_404(
+                Subscription, user=user, author=author)
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(
+        detail=False,
+        permission_classes=[IsAuthenticated]
+    )
+    def subscriptions(self, request):
+        user = request.user
+        queryset = ApiUser.objects.filter(subscribing__user=user)
+        pages = self.paginate_queryset(queryset)
+        serializer = SubscriptionSerializer(
+            pages, many=True, context={"request": request})
+        return self.get_paginated_response(serializer.data)
+
+
+
+    # permission_classes = (AllowAny,)
+    # http_method_names = ['get', 'post', 'patch', 'delete']
+    # lookup_field = 'username'
+    # filter_backends = (filters.SearchFilter,)
+    # search_fields = ('username',)
+
+    # def get_serializer_class(self):
+    #     # Если запрошенное действие (action) — получение списка объектов ('list')
+    #     if self.action == 'list':
+    #         # ...то применяем CatListSerializer
+    #         return ApiUserSerializer
+    #     # А если запрошенное действие — не 'list', применяем CatSerializer
+    #     return UserCreateSerializer
+
+    # @action(
+    #     methods=('GET'),
+    #     detail=False, #True - 1 object, False - list objects
+    #     permission_classes=(IsAdminOrReadOnly,),
+    # )
+    #
+    #
+    # def me(self, request):
+    #     if request.method == 'GET':
+    #         serializer = ApiUserSerializer(request.user)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     elif request.method == 'PATCH':
+    #         serializer = UserMeRoleSerializer(
+    #             request.user,
+    #             data=request.data,
+    #             partial=True
+    #         )
+    #         serializer.is_valid(raise_exception=True)
+    #         serializer.save()
+    #         return Response(serializer.data,
+    #                         status=status.HTTP_200_OK)
 
 
 # class RecipeViewSet(viewsets.ModelViewSet):
@@ -87,16 +145,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeSerializer
     permission_classes = (IsModerator,)
 
+
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (IsAdminOrReadOnly,)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    # def retrieve(self, request, *args, **kwargs):
+    #     instance = self.get_object()  # Получаем объект по ID
+    #     serializer = self.get_serializer(instance)
+    #     return Response(serializer.data)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (IsAdminOrReadOnly,)
+    filterset_class = IngredientFilter
+    filter_backends = (DjangoFilterBackend,)
 
 
 class IngredientInRecipeViewSet(viewsets.ModelViewSet):

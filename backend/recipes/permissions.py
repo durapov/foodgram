@@ -1,6 +1,6 @@
 #
 from rest_framework.permissions import SAFE_METHODS, BasePermission
-from rest_framework import decorators, generics, permissions, mixins, viewsets
+from rest_framework import decorators, generics, permissions, mixins, viewsets, views
 
 
 class IsAdmin(BasePermission):
