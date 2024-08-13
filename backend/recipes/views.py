@@ -149,7 +149,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (AllowAny,)
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -165,10 +165,14 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (AllowAny,)
     filterset_class = IngredientFilter
     filter_backends = (DjangoFilterBackend,)
 
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 class IngredientInRecipeViewSet(viewsets.ModelViewSet):
     queryset = IngredientInRecipe.objects.all()

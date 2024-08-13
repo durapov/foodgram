@@ -99,15 +99,15 @@ class Recipe(models.Model):
         through='IngredientInRecipe',
         related_name='ingredients'
     )
-    is_favorited = models.BooleanField('Находится ли в избранном')
-    is_in_shopping_cart = models.BooleanField('Находится ли в корзине')
+    # is_favorited = models.BooleanField('Находится ли в избранном')
+    # is_in_shopping_cart = models.BooleanField('Находится ли в корзине')
     name = models.CharField('Название', max_length=200)
     image = models.URLField('Ссылка на картинку на сайте')
     text = models.TextField('Описание')
-    # cooking_time = models.PositiveSmallIntegerField(
-    #     'Время приготовления (в минутах)',
-    #     validators=[MinValueValidator(1)]
-    # ),
+    cooking_time = models.PositiveSmallIntegerField(
+         'Время приготовления (в минутах)',
+         validators=[MinValueValidator(1)]
+    ),
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True
     )
     class Meta:
@@ -142,8 +142,11 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    name = models.CharField('Название', max_length=200)
-    measurment_unit = models.CharField('Единицы измерения', max_length=200)
+    name = models.CharField('Название', max_length=128)
+    measurement_unit = models.CharField(
+        'Единицы измерения',
+        max_length=64,
+    )
 
     class Meta:
         verbose_name = 'Ингредиент'
