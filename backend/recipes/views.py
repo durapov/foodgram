@@ -6,9 +6,11 @@ from rest_framework import viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
 from djoser import views as djoser_views
 from .models import Recipe, Tag, Ingredient, IngredientInRecipe, ApiUser, Subscription
-from .serializers import (RecipeSerializer, TagSerializer, ApiUserSerializer,
-                          IngredientSerializer, IngredientInRecipeSerializer,
-                          UserMeRoleSerializer, SubscriptionSerializer)
+from .serializers import (
+    RecipeSerializer, TagSerializer, ApiUserSerializer, IngredientSerializer,
+    # IngredientInRecipeSerializer,
+    # SubscriptionSerializer
+)
 
 from djoser.views import UserViewSet
 from uuid import uuid4
@@ -27,10 +29,6 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from .filterset import IngredientFilter, RecipeFilter
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsModerator, MixedPermission, CreateUpdateDestroyDS
-
-
-#########
-
 
 
 class ApiUserViewSet(UserViewSet):
@@ -117,6 +115,47 @@ class ApiUserViewSet(UserViewSet):
     #                         status=status.HTTP_200_OK)
 
 
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Tag.objects.all()
+    serializer_class = TagSerializer
+    permission_classes = (AllowAny,)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Ingredient.objects.all()
+    serializer_class = IngredientSerializer
+    permission_classes = (AllowAny,)
+    filterset_class = IngredientFilter
+    filter_backends = (DjangoFilterBackend,)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
+    permission_classes = (IsModerator,)
+
+
+
+
+
+
+# class IngredientInRecipeViewSet(viewsets.ModelViewSet):
+#     queryset = IngredientInRecipe.objects.all()
+#     serializer_class = IngredientInRecipeSerializer
+#     permission_classes = (IsModerator,)
+
+
+
 # class RecipeViewSet(viewsets.ModelViewSet):
 #     queryset = Recipe.objects.all()
 #     serializer_class = RecipeSerializer
@@ -135,46 +174,3 @@ class ApiUserViewSet(UserViewSet):
 #         serializer.save(author=self.request.user, title=recipe)
 
 
-# class RecipeViewSet(viewsets.ModelViewSet):
-#     queryset = Recipe.objects.all()
-#     serializer_class = RecipeSerializer
-#     permission_classes = (IsModerator,)
-
-class RecipeViewSet(viewsets.ModelViewSet):
-    queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
-    permission_classes = (IsModerator,)
-
-
-class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-    permission_classes = (AllowAny,)
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    # def retrieve(self, request, *args, **kwargs):
-    #     instance = self.get_object()  # Получаем объект по ID
-    #     serializer = self.get_serializer(instance)
-    #     return Response(serializer.data)
-
-
-class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all()
-    serializer_class = IngredientSerializer
-    permission_classes = (AllowAny,)
-    filterset_class = IngredientFilter
-    filter_backends = (DjangoFilterBackend,)
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-class IngredientInRecipeViewSet(viewsets.ModelViewSet):
-    queryset = IngredientInRecipe.objects.all()
-    serializer_class = IngredientInRecipeSerializer
-    permission_classes = (IsModerator,)

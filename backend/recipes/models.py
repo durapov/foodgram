@@ -1,3 +1,4 @@
+import datetime
 from datetime import timezone
 from django.core.exceptions import BadRequest
 from django.contrib.auth.base_user import BaseUserManager
@@ -12,8 +13,6 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
-
-STRING_LENGTH = 20
 
 class ApiUser(AbstractUser):
 
@@ -75,50 +74,8 @@ class ApiUser(AbstractUser):
         return self.role == 'moderator'
 
 
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'role')
-    search_fields = ('username', 'email', 'role')
-    list_filter = ('role',)
-
-
-
-class Recipe(models.Model):
-    tags = models.ManyToManyField('Tag')
-    #     'Tag',
-    #     through='TagsInRecipe',
-    #     related_name='tags'
-    # )
-    author = models.ForeignKey(
-        ApiUser,
-        on_delete=models.CASCADE,
-        related_name='recipe_author',
-        null=True, blank=True
-    )
-    ingredients = models.ManyToManyField(
-        'Ingredient',
-        through='IngredientInRecipe',
-        related_name='ingredients'
-    )
-    # is_favorited = models.BooleanField('Находится ли в избранном')
-    # is_in_shopping_cart = models.BooleanField('Находится ли в корзине')
-    name = models.CharField('Название', max_length=200)
-    image = models.URLField('Ссылка на картинку на сайте')
-    text = models.TextField('Описание')
-    cooking_time = models.PositiveSmallIntegerField(
-         'Время приготовления (в минутах)',
-         validators=[MinValueValidator(1)]
-    ),
-    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True
-    )
-    class Meta:
-        verbose_name = 'Рецепт'
-        verbose_name_plural = 'Рецепты'
-        ordering = ['pub_date']
-
-
 class Tag(models.Model):
-    name = models.CharField('Название', max_length=200)
-    color = models.CharField('Цвет в HEX', max_length=7)
+    name = models.CharField('Название', unique=True, max_length=200)
     slug = models.CharField(
         'Уникальный слаг', max_length=200,
         unique=True,
@@ -128,17 +85,14 @@ class Tag(models.Model):
             message='Неподходящий слаг')
         ]
     )
-    author = models.ForeignKey(
-        ApiUser,
-        on_delete=models.CASCADE,
-        related_name='tag_author',
-        null=True, blank=True
-    )
 
     class Meta:
         verbose_name = 'Тэг'
         verbose_name_plural = 'Тэги'
         ordering = ['name']
+
+    def __str__(self):
+        return self.name
 
 
 class Ingredient(models.Model):
@@ -153,17 +107,66 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
         ordering = ['name']
 
+    def __str__(self):
+        return self.name
+
+
+
+class Recipe(models.Model):
+    name = models.CharField('Название', max_length=200)
+    text = models.TextField('Описание')
+    cooking_time = models.PositiveSmallIntegerField(
+         'Время приготовления (в минутах)',
+         validators=[MinValueValidator(1)]
+    )
+    image = models.URLField('Ссылка на картинку на сайте')
+    # is_favorited = models.BooleanField('Находится ли в избранном')
+    # is_in_shopping_cart = models.BooleanField('Находится ли в корзине')
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+    author = models.ForeignKey(
+        ApiUser,
+        on_delete=models.CASCADE,
+#        related_name='recipe_author',
+        null=True, blank=True
+    )
+
+    tags = models.ManyToManyField(
+        'Tag',
+        through='TagsInRecipe',
+#        related_name='recipes',
+        verbose_name='Тэги'
+    )
+
+    ingredients = models.ManyToManyField(
+        'Ingredient',
+        through='IngredientInRecipe',
+#        related_name='ingredients'
+        verbose_name='Ингредиенты'
+    )
+
+
+
+    class Meta:
+        verbose_name = 'Рецепт'
+        verbose_name_plural = 'Рецепты'
+        ordering = ['pub_date']
+
+    def __str__(self):
+        return self.name
+
+
 
 class IngredientInRecipe(models.Model):
-    name = models.ForeignKey(
+
+    ingredient = models.ForeignKey(
         Ingredient,
-        related_name='IngredientInRecipe',
+        related_name='ingredient_in_recipe',
         on_delete=models.CASCADE,
         verbose_name='Ингредиент'
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name='recipe',
+        related_name='ingredient_in_recipe',
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
     )
@@ -177,15 +180,16 @@ class IngredientInRecipe(models.Model):
         verbose_name_plural = 'Списки ингредиентов рецептов'
 
 class ShopingCart(models.Model):
+
     recipe = models.ForeignKey(
         Recipe,
-        related_name='recipe_in_cart',
+         related_name='recipe_in_cart',
         on_delete=models.CASCADE,
         verbose_name='Рецепт'
     )
     user = models.ForeignKey(
         ApiUser,
-        related_name='user_in_cart',
+        related_name='recipe_in_cart',
         on_delete=models.CASCADE,
         verbose_name='Пользователь'
     )
@@ -196,39 +200,75 @@ class ShopingCart(models.Model):
 
 
 class Subscription(models.Model):
+    pass
+    #
+    # subscriber = models.ForeignKey(
+    #     ApiUser,
+    #     verbose_name='Подписчик',
+    #     related_name='subscriber',
+    #     on_delete=models.CASCADE,
+    # )
+    #
+    # author = models.ForeignKey(
+    #     ApiUser,
+    #     verbose_name="Автор рецепта",
+    #     related_name="author",
+    #     on_delete=models.CASCADE,
+    # )
+    # class Meta:
+    #     verbose_name = 'Подписка на пользователя'
+    #     verbose_name_plural = 'Подписки на пользователей'
+    #     ordering = ('subscriber', 'author')
+    #     constraints = [models.UniqueConstraint(
+    #         fields=['subscriber', 'author'],
+    #         name='subscription_unique'
+    #         )
+    #     ]
+    #
+    # def __str__(self):
+    #     return f"{self.subscriber} подписан на {self.author}"
+    #
+    # def clean(self):
+    #     if self.subscriber == self.author:
+    #         raise BadRequest('На себя не подписаться')
 
-    subscriber = models.ForeignKey(
-        ApiUser,
-        related_name='subscriber',
-        verbose_name='Подписчик',
-        on_delete=models.CASCADE,
-    )
 
-    author = models.ForeignKey(
-        ApiUser,
-        related_name="author",
-        verbose_name="Автор рецепта",
-        on_delete=models.CASCADE,
-    )
-    class Meta:
-        verbose_name = 'Подписка на пользователя'
-        verbose_name_plural = 'Подписки на пользователей'
-        ordering = ('subscriber', 'author')
-        constraints = [models.UniqueConstraint(
-            fields=['subscriber', 'author'],
-            name='subscription_unique'
-            )
-        ]
 
-    def __str__(self):
-        return f"{self.subscriber} подписан на {self.author}"
-
-    def clean(self):
-        if self.subscriber == self.author:
-            raise BadRequest('На себя не подписаться')
 
 class Favorite(models.Model):
+    user = models.ForeignKey(
+        ApiUser,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Пользователь',
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Рецепт',
+    )
+
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
+        constraints = [models.UniqueConstraint(
+            fields=['user', 'recipe'],
+            name='unique_favourite')
+        ]
 
+    def __str__(self):
+        return f'{self.user} добавил "{self.recipe}" в Избранное'
+
+class TagsInRecipe(models.Model):
+
+    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE)
+    tag = models.ForeignKey('Tag', on_delete=models.CASCADE)
+
+
+
+class UserAdmin(admin.ModelAdmin):
+    pass
+    # list_display = ('username', 'email', 'role')
+    # search_fields = ('username', 'email', 'role')
+    # list_filter = ('role',)
