@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+DOMAIN = os.getenv('DOMAIN')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -15,7 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', get_random_secret_key())
 DEBUG = os.getenv('DEBUG', 'false').lower() == 'false'
-# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')
+#ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')
 ALLOWED_HOSTS = ['*']
 
 
@@ -103,7 +104,7 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
-AUTH_USER_MODEL = 'recipes.ApiUser'
+AUTH_USER_MODEL = 'recipes.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -139,10 +140,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'backend_static'
+STATIC_ROOT = BASE_DIR / 'collected_static'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / ('media'
-                         '')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
@@ -151,37 +151,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DJOSER = {
     'LOGIN_FIELD': 'email',
     'HIDE_USERS': False,
-    'SERIALIZERS': {
-        'user': 'recipes.serializers.ApiUserSerializer',
-        'current_user': 'recipes.serializers.ApiUserSerializer',
+    'PERMISSIONS': {
+        'user': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
     },
-    # 'PERMISSIONS': {
-    #     'user_list': ['rest_framework.permissions.AllowAny'],
-    #     'user': ['rest_framework.permissions.AllowAny'],
-    # }
 }
-
-
-
-######
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-#        'rest_framework.permissions.IsAdminUser',
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
-    # 'DEFAULT_PARSER_CLASES': [
-    #     'rest_framework.parsers.JSONParseer',
-    # ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend'
-    ],
-
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
-    'PAGE_SIZE': 5,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 6,
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -191,7 +175,6 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
 ]
-
 CORS_ALLOW_METHODS = (
     "DELETE",
     "GET",
@@ -200,7 +183,6 @@ CORS_ALLOW_METHODS = (
     "POST",
     "PUT",
 )
-
 CORS_ALLOW_HEADERS = (
     "accept",
     "authorization",
