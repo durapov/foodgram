@@ -249,7 +249,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
         if (request.method == 'POST' and Subscribe.objects.filter(
                 user=request.user, subscriber=user).exists()):
             raise serializers.ValidationError(
-                {'non_field_errors': ['Вы подписались на пользователя ранее.']})
+                {'non_field_errors':
+                     ['Вы подписались на пользователя ранее.']})
         return data
 
     class Meta:
@@ -298,11 +299,14 @@ class ShoppingListSerializer(serializers.ModelSerializer):
     def validate(self, data):
         request_context = self.context['request']
         try:
-            recipes_get = Recipe.objects.get(pk=self.context['view'].kwargs.get('pk'))
+            recipes_get = Recipe.objects.get(
+                pk=self.context['view'].kwargs.get('pk'))
         except Recipe.DoesNotExist:
-            raise serializers.ValidationError({'recipes': ['Такого рецепта нет.']})
-        if (request_context.method == 'POST' and ShoppingList.objects.filter(
-                user=request_context.user, recipes=recipes_get).exists()):
+            raise serializers.ValidationError(
+                {'recipes': ['Такого рецепта нет.']})
+        if (request_context.method == 'POST'
+                and ShoppingList.objects.filter(
+                    user=request_context.user, recipes=recipes_get).exists()):
             raise serializers.ValidationError(
                 {'recipes': ['Рецепт уже в корзине.']})
         return data
@@ -318,9 +322,11 @@ class FavoriteSerializer(ShoppingListSerializer):
     def validate(self, data):
         request_context = self.context['request']
         try:
-            recipes_get = Recipe.objects.get(pk=self.context['view'].kwargs.get('pk'))
+            recipes_get = Recipe.objects.get(
+                pk=self.context['view'].kwargs.get('pk'))
         except Recipe.DoesNotExist:
-            raise serializers.ValidationError({'recipes': ['Такого рецепта нет.']})
+            raise serializers.ValidationError(
+                {'recipes': ['Такого рецепта нет.']})
         if (request_context.method == 'POST' and Favorite.objects.filter(
                 user=request_context.user, recipes=recipes_get).exists()):
             raise serializers.ValidationError(

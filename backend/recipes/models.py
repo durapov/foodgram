@@ -208,8 +208,8 @@ class Recipe(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.short_link:
-            self.short_link = slugify(self.name, allow_unicode=True)[
-                              :RECIPE_SHORT_LENGTH]
+            self.short_link = slugify(
+                self.name, allow_unicode=True)[:RECIPE_SHORT_LENGTH]
         super().save(*args, **kwargs)
 
     class Meta:

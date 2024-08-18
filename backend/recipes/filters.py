@@ -24,7 +24,8 @@ class RecipeFilter(FilterSet):
     def filter_tags(self, queryset, name, value):
         if not value:
             return queryset
-        get_tags = [tag_value for tag_value in self.request.GET.getlist('tags')]
+        get_tags = [
+            tag_value for tag_value in self.request.GET.getlist('tags')]
         queryset = queryset.filter(tags__slug__in=get_tags)
         return queryset
 

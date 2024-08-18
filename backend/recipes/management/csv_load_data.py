@@ -48,6 +48,7 @@ class Command(BaseCommand):
         try:
             import_data(model, file)
         except Exception as exception:
-            self.stdout.write(self.style.ERROR(f'Ошибка импорта:\n{exception}.'))
+            self.stdout.write(
+                self.style.ERROR(f'Ошибка импорта:\n{exception}.'))
         else:
             self.stdout.write(self.style.SUCCESS('Импорт произведен'))
