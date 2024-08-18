@@ -249,8 +249,8 @@ class SubscribeSerializer(serializers.ModelSerializer):
         if (request.method == 'POST' and Subscribe.objects.filter(
                 user=request.user, subscriber=user).exists()):
             raise serializers.ValidationError(
-                {'non_field_errors':
-                     ['Вы подписались на пользователя ранее.']})
+                {'non_field_errors': [
+                    'Вы подписались на пользователя ранее.']})
         return data
 
     class Meta:
