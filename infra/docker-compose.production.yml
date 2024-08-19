@@ -11,8 +11,7 @@ services:
     volumes:
       - pg_data_production:/var/lib/postgresql/data
   backend:
-    container_name: foodgram_backend
-    build: ../backend
+    image: drpvd/foodgram_backend
     env_file: .env
     depends_on:
       - db
