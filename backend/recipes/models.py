@@ -1,8 +1,6 @@
-from backend.constants import (EMAIL_LENGTH, INGREDIENT_LENGTH,
-                               MEASURMENT_LENGTH, MIN_COOKING_TIME,
-                               MIN_INGREDIENTS, NAME_LENGTH, RECIPE_LENGTH,
-                               RECIPE_SHORT_LENGTH, ROLE_LENGTH, SLUG_LENGTH,
-                               TAG_LENGTH)
+from backend.constants import EMAIL_LENGTH, INGREDIENT_LENGTH, MEASURMENT_LENGTH, MIN_COOKING_TIME, MIN_INGREDIENTS, \
+    NAME_LENGTH, RECIPE_LENGTH, RECIPE_SHORT_LENGTH, ROLE_LENGTH, SLUG_LENGTH, TAG_LENGTH
+
 from django.contrib.auth import hashers
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
