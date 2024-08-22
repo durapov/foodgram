@@ -12,7 +12,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv('SECRET_KEY', get_random_secret_key())
 DEBUG = os.getenv('DEBUG', 'false').lower() == 'true'
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = ['62.84.122.208', '127.0.0.1', 'localhost', 'drpvd.zapto.org']
+# os.getenv('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(','))
 
 INSTALLED_APPS = [
     'recipes.apps.RecipesConfig',
@@ -140,6 +141,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://sub.example.com",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "http://62.84.122.208:8000/"
 ]
 CORS_ALLOW_METHODS = (
     "DELETE",
