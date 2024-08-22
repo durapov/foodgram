@@ -141,7 +141,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://sub.example.com",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "http://62.84.122.208:8000/"
+
 ]
 CORS_ALLOW_METHODS = (
     "DELETE",
