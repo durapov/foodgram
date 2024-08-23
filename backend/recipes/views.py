@@ -9,10 +9,10 @@ from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import filters, status
 from rest_framework.decorators import action
-from rest_framework.pagination import (LimitOffsetPagination,
-                                       PageNumberPagination)
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.pagination import LimitOffsetPagination, \
+    PageNumberPagination
+from rest_framework.permissions import IsAuthenticated, \
+    IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
@@ -76,8 +76,8 @@ class RecipeViewSet(ModelViewSet):
 
     def recipe_post(self):
         request_user = self.request.user
-        get_recipe = get_object_or_404(
-            Recipe, pk=self.kwargs[self.pk_url_kwarg])
+        get_recipe = get_object_or_404(Recipe,
+                                       pk=self.kwargs[self.pk_url_kwarg])
         serializer = self.get_serializer(data=self.request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request_user, recipes=get_recipe)
@@ -87,8 +87,8 @@ class RecipeViewSet(ModelViewSet):
 
     def recipe_delete(self, manager):
         request_user = self.request.user
-        get_recipe = get_object_or_404(
-            Recipe, pk=self.kwargs[self.pk_url_kwarg])
+        get_recipe = get_object_or_404(Recipe,
+                                       pk=self.kwargs[self.pk_url_kwarg])
         if manager.filter(user=request_user, recipes=get_recipe).exists():
             manager.filter(user=request_user, recipes=get_recipe).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -107,8 +107,8 @@ class RecipeViewSet(ModelViewSet):
         shop_list = get_shop_list(self.request.user)
         response = FileResponse(iter([shop_list.getvalue()]),
                                 content_type='text/csv')
-        response['Content-Disposition'] = ('attachment; '
-                                           'filename="shopping_cart.csv"')
+        response[
+            'Content-Disposition'] = 'attachment; filename="shopping_cart.csv"'
         return response
 
     @action(methods=['post'], detail=True, )
@@ -231,10 +231,10 @@ def get_shop_list(user):
     writer = csv.writer(shop_list)
     writer.writerow(['Ингредиент', 'Количество'])
     ingredients = (IngredientInRecipe.objects.filter(
-        ingredient__in=ShoppingList.objects.filter(
-            user=user
-        ).values_list('recipes__ingredients__id', flat=True)
-    ).values('ingredient__name').annotate(total_amount=Sum('amount')))
+        ingredient__in=ShoppingList.objects.filter(user=user).values_list(
+            'recipes__ingredients__id', flat=True)).values('ingredient__name')
+                   .annotate(total_amount=Sum('amount'))
+                   )
     for item in ingredients:
         count_ingredients[item['ingredient__name']] = item['total_amount']
     for key, value in count_ingredients.items():

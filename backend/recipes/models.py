@@ -1,18 +1,18 @@
-from backend.constants import (EMAIL_LENGTH, INGREDIENT_LENGTH,
-                               MEASURMENT_LENGTH, MIN_COOKING_TIME,
-                               MIN_INGREDIENTS, NAME_LENGTH, RECIPE_LENGTH,
-                               RECIPE_SHORT_LENGTH, ROLE_LENGTH, SLUG_LENGTH,
-                               TAG_LENGTH)
-
 from django.contrib.auth import hashers
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import CheckConstraint, UniqueConstraint
 from django.utils.text import slugify
 from django.utils.translation import gettext_lazy
 from rest_framework.exceptions import ValidationError
+from backend.constants import (EMAIL_LENGTH, INGREDIENT_LENGTH,
+                               MAX_COOKING_TIME, MAX_INGREDIENTS,
+                               MEASURMENT_LENGTH,
+                               MIN_COOKING_TIME, MIN_INGREDIENTS, NAME_LENGTH,
+                               RECIPE_LENGTH, RECIPE_SHORT_LENGTH,
+                               ROLE_LENGTH, SLUG_LENGTH, TAG_LENGTH)
 
 
 def user_validator(value):
@@ -67,7 +67,7 @@ class User(AbstractUser):
     )
 
     class Meta:
-        ordering = ('username', 'email')
+        ordering = ['username', 'email']
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
@@ -122,7 +122,7 @@ class Subscribe(models.Model):
         return f'{self.subscriber} подписан на {self.user}'
 
     def clean(self):
-        if self.user == self.author:
+        if self.user == self.subscriber:
             raise ValidationError('Нельзя подписаться на себя')
 
 
@@ -189,7 +189,10 @@ class Recipe(models.Model):
     cooking_time = models.PositiveSmallIntegerField(
         verbose_name='Время приготовления',
         validators=[MinValueValidator(MIN_COOKING_TIME,
-                                      message='Не менее 1 минуты.')],
+                                      message='Не менее 1 минуты.'),
+                    MaxValueValidator(MAX_COOKING_TIME,
+                                      message='Не более 32000 минут.')
+                    ],
     )
     ingredients = models.ManyToManyField(
         Ingredient,
@@ -226,18 +229,23 @@ class IngredientInRecipe(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        verbose_name='Рецепт',
+        related_name='recipes_ingredients',
+        verbose_name='Рецепт'
     )
     ingredient = models.ForeignKey(
         Ingredient,
+        related_name='ingredients_in_recipes',
         on_delete=models.CASCADE,
-        verbose_name='Ингредиент',
+        verbose_name='Ингредиент'
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
         validators=[
             MinValueValidator(MIN_INGREDIENTS,
-                              message='Добавьте хотя бы 1 ингредиент.'), ],
+                              message='Добавьте хотя бы 1 ингредиент.'),
+            MaxValueValidator(MAX_INGREDIENTS,
+                              message='Не более 32000 ингредиентов.')
+        ],
     )
 
     class Meta:
@@ -267,6 +275,7 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
+        ordering = ['user']
 
 
 class ShoppingList(models.Model):
@@ -284,6 +293,7 @@ class ShoppingList(models.Model):
     )
 
     class Meta:
+        ordering = ['user']
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзины'
         constraints = [
@@ -292,4 +302,4 @@ class ShoppingList(models.Model):
         ]
 
     def __str__(self):
-        return f'{self.user} добавил рецепт "{self.recipe}" в Корзину'
+        return f'{self.user} добавил рецепт "{self.recipes}" в Корзину'
