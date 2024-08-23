@@ -233,8 +233,7 @@ def get_shop_list(user):
     ingredients = (IngredientInRecipe.objects.filter(
         ingredient__in=ShoppingList.objects.filter(user=user).values_list(
             'recipes__ingredients__id', flat=True)).values(
-        'ingredient__name').annotate(total_amount=Sum('amount'))
-                   )
+        'ingredient__name').annotate(total_amount=Sum('amount')))
     for item in ingredients:
         count_ingredients[item['ingredient__name']] = item['total_amount']
     for key, value in count_ingredients.items():
