@@ -134,3 +134,8 @@ Your first command doesn't work because the core user doesn't have
 permissions to access that folder. Your second command doesn't work
 because sudo is not running your
 command inside of a shell that interprets it like you expect.
+
+
+выводит переменные окружения
+import os
+print(os.environ.items())
