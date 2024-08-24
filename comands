@@ -60,6 +60,9 @@ sudo docker compose -f docker-compose.production.yml ps
 sudo docker exec -it foodgram-gateway-1 bash
 
 
+sudo docker run -d -v /home/yc-user/foodgram/foodgram_pg_data:/var/lib/postgresql/data foodgram-db-1
+
+
 перезапуск
 sudo docker compose -f docker-compose.production.yml down
 sudo docker drpvd/foodgram_backend pull
@@ -121,3 +124,13 @@ docker volume inspect имя_вашего_volume
 2. Внутри контейнера выполните:
 
    ls /vol/data
+
+
+
+Run sudo -s and then
+cd /var/lib/docker
+
+Your first command doesn't work because the core user doesn't have
+permissions to access that folder. Your second command doesn't work
+because sudo is not running your
+command inside of a shell that interprets it like you expect.
