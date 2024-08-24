@@ -9,7 +9,7 @@ services:
     image: postgres:13.10
     env_file: .env
     volumes:
-      - foodgram_pg_data:/home/yc-user/foodgram/foodgram_pg_data
+      - /home/yc-user/foodgram/foodgram_pg_data:/var/lib/postgresql/data
     restart: always
   backend:
     image: drpvd/foodgram_backend

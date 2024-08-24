@@ -73,6 +73,7 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
 sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
 
+sudo docker compose -f docker-compose.production.yml exec p
 
 sudo docker compose -f docker-compose.production.yml exec -it backend python manage.py shell
 from recipes.models import User; User.objects.create_superuser('superuser', 'superuser@email.com', '!QAZxsw2')
