@@ -5,7 +5,8 @@ from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
-from backend.constants import (MAX_COOKING_TIME, MIN_COOKING_TIME)
+from backend.constants import (MAX_COOKING_TIME, MAX_INGREDIENTS,
+                               MIN_COOKING_TIME, MIN_INGREDIENTS, )
 
 from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
                      ShoppingList, Subscribe, Tag, User)
@@ -50,7 +51,14 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     ingredient = IngredientSerializer(
         read_only=True,
     )
-    amount = serializers.IntegerField(min_value=1, max_value=32000)
+    amount = serializers.IntegerField(
+        required=True,
+        validators=[
+            MinValueValidator(MIN_INGREDIENTS,
+                              message='Не менее 1 минуты.'),
+            MaxValueValidator(MAX_INGREDIENTS,
+                              message='Не более 32000 минут.')]
+    )
 
     class Meta:
         model = IngredientInRecipe
@@ -71,9 +79,14 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     def get_ingredients(self, obj):
-        return IngredientInRecipeSerializer(
+        ingredients = IngredientInRecipeSerializer(
             obj.recipes_ingredients.all(), many=True,
         ).data
+        for ingredient in ingredients:
+            if ingredient['amount'] == 0:
+                raise serializers.ValidationError(
+                    {'amount': ['Должно быть не меньше 1.']})
+        return ingredients
 
     def get_is_favorited(self, obj):
         request = Favorite.objects.all()
@@ -130,13 +143,6 @@ class RecipeWriteSerializer(RecipeGetSerializer):
             if ingredient['id'] in ingredients_set:
                 raise serializers.ValidationError(
                     {'ingredients': ['Такой id занят.']})
-            # try:
-            #     if int(ingredient.get('amount')) < 1:
-            #         raise serializers.ValidationError(
-            #             {'amount': ['Должно быть не меньше 1.']})
-            # except ValueError:
-            #     raise serializers.ValidationError(
-            #         {'amount': ['Должно быть целое число.']})
             ingredients_set.add(ingredient['id'])
         try:
             ingredients = Ingredient.objects.filter(id__in=ingredients_set)
