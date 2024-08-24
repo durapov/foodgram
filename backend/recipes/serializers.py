@@ -50,6 +50,7 @@ class IngredientInRecipeSerializer(serializers.ModelSerializer):
     ingredient = IngredientSerializer(
         read_only=True,
     )
+    amount = serializers.IntegerField(min_value=1, max_value=32000)
 
     class Meta:
         model = IngredientInRecipe
@@ -129,13 +130,13 @@ class RecipeWriteSerializer(RecipeGetSerializer):
             if ingredient['id'] in ingredients_set:
                 raise serializers.ValidationError(
                     {'ingredients': ['Такой id занят.']})
-            try:
-                if int(ingredient.get('amount')) < 1:
-                    raise serializers.ValidationError(
-                        {'amount': ['Должно быть не меньше 1.']})
-            except ValueError:
-                raise serializers.ValidationError(
-                    {'amount': ['Должно быть целое число.']})
+            # try:
+            #     if int(ingredient.get('amount')) < 1:
+            #         raise serializers.ValidationError(
+            #             {'amount': ['Должно быть не меньше 1.']})
+            # except ValueError:
+            #     raise serializers.ValidationError(
+            #         {'amount': ['Должно быть целое число.']})
             ingredients_set.add(ingredient['id'])
         try:
             ingredients = Ingredient.objects.filter(id__in=ingredients_set)

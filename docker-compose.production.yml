@@ -1,7 +1,7 @@
 version: '3'
 volumes:
   pg_data:
-  #  external: true
+    external: true
   static:
   media:
 services:
