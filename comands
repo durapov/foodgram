@@ -1,0 +1,122 @@
+~/Dev/foodgram/venv/bin/activate
+
+
+npm cache clean --force
+sudo apt clean
+sudo journalctl --vacuum-time=1d
+sudo docker system prune -af
+
+docker build -t drpvd/foodgram_backend .
+docker build -t drpvd/foodgram_frontend .
+docker build -t drpvd/foodgram_gateway .
+sudo docker image ls -a
+docker image rm $(docker image ls -f "dangling=true" -q)
+
+docker push drpvd/foodgram_frontend                                                            1 ✘
+docker push drpvd/foodgram_backend
+docker push drpvd/foodgram_gateway
+
+ sudo docker image rm drpvd/foodgram_backend
+
+sudo docker pull drpvd/foodgram_gateway
+
+
+
+
+You can use two commands: df and du.
+df - report file system disk space usage
+Usage works like such:
+df -h
+The -h flag provides human readable output (which makes reading of the output - easier).
+du - estimate file space usage
+
+
+pip install psycopg2-binary
+sudo systemctl status postgresql
+sudo systemctl start postgresql
+sudo apt-get install postgresql-client
+psql -h db -U your_database_user -d your_database_name
+
+
+systemctl status nginx
+
+sudo docker stop $(sudo docker ps -a -q)
+sudo docker rm $(sudo docker ps -a -q)
+ -d
+
+sudo docker container ls -a
+sudo docker image ls -a
+sudo docker volume ls
+
+mkdir foodgram
+sudo nano docker-compose.production.yml
+ctrl-c ctrl-v
+ctrl-o ctrl-x
+sudo nano .env
+
+sudo docker compose -f docker-compose.production.yml up -d
+sudo docker compose -f docker-compose.production.yml ps
+
+sudo docker exec -it foodgram-gateway-1 bash
+
+
+перезапуск
+sudo docker compose -f docker-compose.production.yml down
+sudo docker drpvd/foodgram_backend pull
+sudo docker compose -f docker-compose.production.yml up -d
+
+sudo docker exec foodgram-backend-1 python manage.py collectstatic
+sudo docker exec foodgram-backend-1 cp -r /app/collected_static/. /backend_static/static/
+
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py makemigrations
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py migrate
+sudo docker compose -f docker-compose.production.yml exec backend python manage.py collectstatic
+sudo docker compose -f docker-compose.production.yml exec backend cp -r /app/collected_static/. /backend_static/static/
+
+
+sudo docker compose -f docker-compose.production.yml exec -it backend python manage.py shell
+from recipes.models import User; User.objects.create_superuser('superuser', 'superuser@email.com', '!QAZxsw2')
+
+
+
+настройка на статику nginx
+sudo nano /etc/nginx/sites-enabled/default
+
+nano of course can delete blocks, see this article
+use CTRL+Shift+6 to mark the beginning of your block
+move cursor with arrow keys to end of your block, the text will be highlighted.
+use CTRL+K to cut/delete block.
+To paste the block to another place, move cursor to the position and the use CTRL+U. You can paste the block as often as you want to.
+
+sudo docker volume rm $(sudo docker volume ls -q)
+
+содержимое volume
+sudo docker run -it --rm -v foodgram_backend_static:/vol busybox ls -l /vol
+
+
+Чтобы посмотреть содержимое подкаталога в Docker volume, можно использовать несколько подходов. Вот основные из них:
+### 1. **Использование временного контейнера**
+Вы можете запустить временный контейнер и примонтировать volume, чтобы просмотреть его содержимое. Например:
+docker run --rm -it -v имя_вашего_volume:/vol busybox sh
+Здесь имя_вашего_volume — это имя вашего Docker volume. После запуска контейнера вы окажетесь в командной строке внутри контейнера. Чтобы просмотреть содержимое подкаталога, выполните:
+ls /vol/путь/к/вашему/подкаталогу
+### 2. **Использование команды docker cp**
+Если вы хотите скопировать содержимое из volume на хост, вы можете использовать команду docker cp. Для этого сначала нужно запустить контейнер с вашим volume:
+docker run -d --name temp_container -v имя_вашего_volume:/vol busybox
+После этого вы можете скопировать нужный подкаталог:
+docker cp temp_container:/vol/путь/к/вашему/подкаталогу /путь/на/вашем/хосте
+Не забудьте остановить и удалить временный контейнер после завершения:
+docker stop temp_container
+docker rm temp_container
+### 3. **Использование docker volume inspect**
+Вы также можете использовать команду docker volume inspect, чтобы получить информацию о том, где volume хранится на хосте:
+docker volume inspect имя_вашего_volume
+Это даст вам путь к тому месту на файловой системе вашего хоста, где хранится volume. Вы можете перейти по этому пути и просмотреть содержимое подкаталога, используя стандартные команды Unix (например, ls).
+### Пример
+Если ваш volume называется my_volume и вы хотите увидеть содержимое подкаталога data, вы можете сделать так:
+1. Запустите временный контейнер:
+     docker run --rm -it -v my_volume:/vol busybox sh
+
+2. Внутри контейнера выполните:
+
+   ls /vol/data

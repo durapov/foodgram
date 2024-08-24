@@ -1,6 +1,7 @@
 version: '3'
 volumes:
-  pg_data:
+  foodgram_pg_data:
+    external: true
   static:
   media:
 services:
@@ -8,7 +9,7 @@ services:
     image: postgres:13.10
     env_file: .env
     volumes:
-      - pg_data:/var/lib/docker/volumes/foodgram_pg_data/_data
+      - foodgram_pg_data:/home/yc-user/foodgram/foodgram_pg_data
     restart: always
   backend:
     image: drpvd/foodgram_backend
