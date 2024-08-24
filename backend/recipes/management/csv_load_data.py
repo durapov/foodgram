@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import models, transaction
 
+print('begin')
+
 
 def import_data(model_name, csv_file_path):
     if model_name == 'User':
