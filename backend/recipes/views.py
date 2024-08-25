@@ -242,10 +242,9 @@ def get_shop_list(user):
     writer.writerow(['Ингредиент', 'Количество'])
     user_shopping_list = user.shoppinglist_users.all()
     ingredients = (IngredientInRecipe.objects.filter(
-        recipe__in=user_shopping_list.values_list('recipes', flat=True))
-                   .values('ingredient__name')
-                   .annotate(total_amount=Sum('amount'))
-                   )
+        recipe__in=user_shopping_list.values_list('recipes',
+                                                  flat=True)).values(
+        'ingredient__name').annotate(total_amount=Sum('amount')))
     for item in ingredients:
         count_ingredients[item['ingredient__name']] = item['total_amount']
     for key, value in count_ingredients.items():
