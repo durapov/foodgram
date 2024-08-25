@@ -15,6 +15,7 @@ from rest_framework.permissions import IsAuthenticated, \
     IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from backend.constants import PAGE_SIZE
 
 from .filters import IngredientFilter, RecipeFilter
 from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
@@ -32,7 +33,7 @@ class PaginationNone(PageNumberPagination):
 
 
 class CustomPagination(PageNumberPagination):
-    page_size = 6
+    page_size = PAGE_SIZE
     page_size_query_param = 'limit'
 
 
@@ -154,10 +155,14 @@ class UserViewSet(DjoserUserViewSet):
         user = self.request.user
         queryset = User.objects.all()
         if user.is_authenticated:
-            subscribers = Subscribe.objects.filter(
-                subscriber=OuterRef('pk'), user=user)
+            subscribers_all = user.subscribers.all()
+            subscribers = subscribers_all.values_list('user', flat=True)
             queryset = queryset.annotate(
-                is_subscribed=Exists(subscribers))
+                is_subscribed=Exists(Subscribe.objects.filter(
+                    user__in=subscribers,
+                    subscriber=OuterRef('pk')
+                ))
+            )
         return queryset
 
     def get_permissions(self):
@@ -235,10 +240,12 @@ def get_shop_list(user):
     shop_list = io.StringIO()
     writer = csv.writer(shop_list)
     writer.writerow(['Ингредиент', 'Количество'])
+    user_shopping_list = user.shoppinglist_users.all()
     ingredients = (IngredientInRecipe.objects.filter(
-        ingredient__in=ShoppingList.objects.filter(user=user).values_list(
-            'recipes__ingredients__id', flat=True)).values(
-        'ingredient__name').annotate(total_amount=Sum('amount')))
+        recipe__in=user_shopping_list.values_list('recipes', flat=True))
+                   .values('ingredient__name')
+                   .annotate(total_amount=Sum('amount'))
+                   )
     for item in ingredients:
         count_ingredients[item['ingredient__name']] = item['total_amount']
     for key, value in count_ingredients.items():

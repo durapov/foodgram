@@ -1,6 +1,7 @@
 from django.core.files.base import ContentFile
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
@@ -83,32 +84,24 @@ class RecipeGetSerializer(serializers.ModelSerializer):
             obj.recipes_ingredients.all(), many=True,
         ).data
         for ingredient in ingredients:
-            if ingredient['amount'] == 0:
+            if ingredient['amount'] <= 0:
                 raise serializers.ValidationError(
                     {'amount': ['Должно быть не меньше 1.']})
         return ingredients
 
     def get_is_favorited(self, obj):
-        request = Favorite.objects.all()
-        fav_recipes = []
-        for i in request:
-            fav_recipe = i.recipes
-            fav_recipes.append(fav_recipe)
-        if obj in fav_recipes:
-            return True
-        else:
-            return False
+        request = self.context['request']
+        if request.user.is_authenticated:
+            return Favorite.objects.filter(
+                user=request.user, recipes=obj).exists()
+        return False
 
     def get_is_in_shopping_cart(self, obj):
-        request = ShoppingList.objects.all()
-        shopping_cart_recipes = []
-        for i in request:
-            shopping_card_item = i.recipes
-            shopping_cart_recipes.append(shopping_card_item)
-        if obj in shopping_cart_recipes:
-            return True
-        else:
-            return False
+        request = self.context['request']
+        if request.user.is_authenticated:
+            return ShoppingList.objects.filter(
+                user=request.user, recipes=obj).exists()
+        return False
 
     class Meta:
         model = Recipe
@@ -245,16 +238,13 @@ class SubscribeSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         request = self.context['request']
-        try:
-            user = User.objects.get(pk=self.context['view'].kwargs.get('id'))
-        except User.DoesNotExist:
-            raise serializers.ValidationError(
-                {'subscriber': ['Такого пользователя нет.']})
+        user_id = self.context['view'].kwargs.get('id')
+        user = get_object_or_404(User, pk=user_id)
         if request.user == user:
             raise serializers.ValidationError(
                 {'subscriber': ['На себя не подписаться.']})
-        if (request.method == 'POST' and Subscribe.objects.filter(
-                user=request.user, subscriber=user).exists()):
+        if (request.method == 'POST' and request.user.subscription_author
+                .filter(subscriber=user).exists()):
             raise serializers.ValidationError(
                 {'non_field_errors': [
                     'Вы подписались на пользователя ранее.']})
@@ -304,16 +294,11 @@ class ShoppingListSerializer(serializers.ModelSerializer):
             instance.recipes, context=self.context).data
 
     def validate(self, data):
-        request_context = self.context['request']
-        try:
-            recipes_get = Recipe.objects.get(
-                pk=self.context['view'].kwargs.get('pk'))
-        except Recipe.DoesNotExist:
-            raise serializers.ValidationError(
-                {'recipes': ['Такого рецепта нет.']})
-        if (request_context.method == 'POST'
-                and ShoppingList.objects.filter(
-                    user=request_context.user, recipes=recipes_get).exists()):
+        request = self.context['request']
+        recipe_id = self.context['view'].kwargs.get('pk')
+        recipe = get_object_or_404(Recipe, pk=recipe_id)
+        if request.method == 'POST' and request.user.shoppinglist_users.filter(
+                recipes=recipe).exists():
             raise serializers.ValidationError(
                 {'recipes': ['Рецепт уже в корзине.']})
         return data
