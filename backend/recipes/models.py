@@ -217,7 +217,7 @@ class Recipe(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
-        ordering = ('pub_date',)
+        ordering = ('-pub_date',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
