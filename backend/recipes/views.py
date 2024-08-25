@@ -31,6 +31,11 @@ class PaginationNone(PageNumberPagination):
     page_size = None
 
 
+class CustomPagination(PageNumberPagination):
+    page_size = 6
+    page_size_query_param = 'limit'
+
+
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
@@ -48,7 +53,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.prefetch_related('author', 'ingredients', 'tags')
     permission_classes = [IsAuthenticatedOrReadOnly, CustomPermission]
-    pagination_class = LimitOffsetPagination
+    pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
     http_method_names = ['get', 'post', 'patch', 'delete']
