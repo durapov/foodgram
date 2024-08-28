@@ -9,13 +9,12 @@ from djoser.serializers import SetPasswordSerializer
 from djoser.views import UserViewSet as DjoserUserViewSet
 from rest_framework import filters, status
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination, \
-    PageNumberPagination
-from rest_framework.permissions import IsAuthenticated, \
-    IsAuthenticatedOrReadOnly
+from rest_framework.pagination import (LimitOffsetPagination,
+                                       PageNumberPagination)
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from backend.constants import PAGE_SIZE
 
 from .filters import IngredientFilter, RecipeFilter
 from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
@@ -26,6 +25,7 @@ from .serializers import (AvatarSerializer, CustomUserCreateSerializer,
                           RecipeGetSerializer, RecipeWriteSerializer,
                           ShoppingListSerializer, SubscribeSerializer,
                           TagSerializer, UserSerializer)
+from backend.constants import PAGE_SIZE
 
 
 class PaginationNone(PageNumberPagination):
@@ -64,12 +64,12 @@ class RecipeViewSet(ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_authenticated:
-            favorites = Favorite.objects.filter(
-                recipes=OuterRef('pk'), user=user)
-            shopping_cart = ShoppingList.objects.filter(
-                recipes=OuterRef('pk'), user=user)
-            subscribers = Subscribe.objects.filter(
-                subscriber=OuterRef('author'), user=user)
+            favorites = user.favorite_users.filter(
+                recipes=OuterRef('pk'))
+            shopping_cart = user.shoppinglist_users.filter(
+                recipes=OuterRef('pk'))
+            subscribers = user.subscription_author.filter(
+                subscriber=OuterRef('author'))
             return super().get_queryset().annotate(
                 is_favorite=Exists(favorites),
                 is_in_shopping_cart=Exists(shopping_cart),
@@ -95,8 +95,9 @@ class RecipeViewSet(ModelViewSet):
         request_user = self.request.user
         get_recipe = get_object_or_404(Recipe,
                                        pk=self.kwargs[self.pk_url_kwarg])
-        if manager.filter(user=request_user, recipes=get_recipe).exists():
-            manager.filter(user=request_user, recipes=get_recipe).delete()
+        recipe = manager.filter(user=request_user, recipes=get_recipe)
+        if recipe.exists():
+            recipe.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -211,9 +212,10 @@ class UserViewSet(DjoserUserViewSet):
     def unsubscribe(self, request, *args, **kwargs):
         request_user = self.request.user
         get_user = get_object_or_404(User, pk=kwargs[self.pk_url_kwarg])
-        unsubscribe, _ = Subscribe.objects.filter(
-            user=request_user, subscriber=get_user).delete()
-        if unsubscribe:
+        subscription = request_user.subscription_author.filter(
+            subscriber=get_user).first()
+        if subscription:
+            subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
