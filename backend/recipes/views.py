@@ -24,7 +24,8 @@ from .serializers import (AvatarSerializer, CustomUserCreateSerializer,
                           FavoriteSerializer, IngredientSerializer,
                           RecipeGetSerializer, RecipeWriteSerializer,
                           ShoppingListSerializer, SubscribeSerializer,
-                          TagSerializer, UserSerializer)
+                          TagSerializer, UserSerializer,
+                          IngredientInRecipeSerializer)
 from backend.constants import PAGE_SIZE
 
 
@@ -40,6 +41,14 @@ class CustomPagination(PageNumberPagination):
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    pagination_class = PaginationNone
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
+
+
+class IngredientInRecipeViewSet(ReadOnlyModelViewSet):
+    queryset = IngredientInRecipe.objects.all()
+    serializer_class = IngredientInRecipeSerializer
     pagination_class = PaginationNone
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
@@ -76,6 +85,17 @@ class RecipeViewSet(ModelViewSet):
                 is_subscribed=Exists(subscribers)
             )
         return super().get_queryset()
+
+    def get_serializer_class(self):
+        if self.action in ['shopping_cart', 'download_shopping_cart']:
+            return ShoppingListSerializer
+        if self.action == 'favorite':
+            return FavoriteSerializer
+        if self.request.method == 'GET':
+            return RecipeGetSerializer
+        if self.request.method == 'PATCH':
+            return RecipeWriteSerializer
+        return super().get_serializer_class()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -128,21 +148,11 @@ class RecipeViewSet(ModelViewSet):
 
     @action(methods=['get'], detail=True, url_path='get-link')
     def get_link(self, request, pk=None):
+        print('===get_link', request)
         get_recipe = self.get_object()
         base_url = request.get_host()
         short_link = f'https://{base_url}/s/{get_recipe.short_link}'
         return Response({'short-link': short_link})
-
-    def get_serializer_class(self):
-        if self.action in ['shopping_cart', 'download_shopping_cart']:
-            return ShoppingListSerializer
-        if self.action == 'favorite':
-            return FavoriteSerializer
-        if self.request.method == 'GET':
-            return RecipeGetSerializer
-        if self.request.method == 'PATCH':
-            return RecipeWriteSerializer
-        return super().get_serializer_class()
 
 
 class UserViewSet(DjoserUserViewSet):

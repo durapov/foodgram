@@ -1,3 +1,6 @@
+from sqlite3 import IntegrityError
+import uuid
+
 from django.contrib.auth import hashers
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
@@ -202,12 +205,15 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(
         Tag,
-        verbose_name='Тэги')
+        verbose_name='Тэги'
+    )
     pub_date = models.DateTimeField(
         verbose_name='Дата публикации',
-        auto_now_add=True)
+        auto_now_add=True
+    )
     short_link = models.SlugField(
-        unique=True, blank=True,
+        unique=True,
+        blank=True,
     )
 
     def save(self, *args, **kwargs):
