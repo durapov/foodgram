@@ -1,6 +1,3 @@
-from sqlite3 import IntegrityError
-import uuid
-
 from django.contrib.auth import hashers
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
