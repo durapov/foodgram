@@ -84,7 +84,6 @@ class RecipeViewSet(ModelViewSet):
                 is_in_shopping_cart=Exists(shopping_cart),
                 is_subscribed=Exists(subscribers)
             )
-        result = super().get_queryset()
         return super().get_queryset()
 
     def get_serializer_class(self):
@@ -122,12 +121,10 @@ class RecipeViewSet(ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    # кастомные действия
     @action(methods=['post'], detail=True, )
     def shopping_cart(self, request, pk=None):
         return self.recipe_post()
 
-    # связанный метод удаления
     @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk=None):
         return self.recipe_delete(ShoppingList.objects)

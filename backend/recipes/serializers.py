@@ -141,7 +141,7 @@ class RecipeWriteSerializer(RecipeGetSerializer):
             ingredients_set.add(ingredient['id'])
             try:
                 Ingredient.objects.get(id=ingredient['id'])
-            except Ingredient.DoesNotExist as error:
+            except Ingredient.DoesNotExist:
                 raise serializers.ValidationError(
                     {'ingredients': ['Такого ингредиента нет.']})
         return data
@@ -151,14 +151,16 @@ class RecipeWriteSerializer(RecipeGetSerializer):
             raise serializers.ValidationError({'image': 'Обязательное поле.'})
         return value
 
-    def create_ingredients(self, data, recipe):
-        ingredients_data = {}
-        for ingredient_data in data:
-            ingredient = ingredient_data['id']
+    def create_ingredients(self, ingredients_data, recipe):
+        for ingredient_data in ingredients_data:
+            ingredient_id = ingredient_data['id']
+            ingredient = Ingredient.objects.get(pk=ingredient_id)
             amount = ingredient_data['amount']
-        IngredientInRecipe.objects.bulk_create(
-            [IngredientInRecipe(recipe=recipe, ingredient=ingredient)
-             for ingredient, amount in ingredients_data.items()], )
+            IngredientInRecipe.objects.create(
+                recipe=recipe,
+                ingredient=ingredient,
+                amount=amount
+            )
         return recipe
 
     @transaction.atomic
@@ -177,14 +179,7 @@ class RecipeWriteSerializer(RecipeGetSerializer):
         tags_data = validated_data.pop('tags')
         ingredients_data = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
-
-        for ingredient_data in ingredients_data:
-            ingredient_id = ingredient_data['id']
-            ingredient = Ingredient.objects.get(pk=ingredient_id)
-            amount = ingredient_data['amount']
-            IngredientInRecipe.objects.create(recipe=recipe,
-                                              ingredient=ingredient,
-                                              amount=amount)
+        self.create_ingredients(ingredients_data, recipe)
         recipe.tags.set(tags_data)
         return recipe
 
