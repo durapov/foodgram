@@ -85,8 +85,8 @@ class RecipeViewSet(ModelViewSet):
                 is_in_shopping_cart=Exists(shopping_cart),
                 is_subscribed=Exists(subscribers)
             )
-        result = super().get_queryset()  ####
-        print('===get_queryset====queryset', result)  ####
+        result = super().get_queryset()
+        print('===get_queryset====queryset', result)
         return super().get_queryset()
 
     def get_serializer_class(self):

@@ -164,9 +164,9 @@ class RecipeWriteSerializer(RecipeGetSerializer):
                     {'ingredients': ['Такой id занят.']})
             ingredients_set.add(ingredient['id'])
 
-            ingredients_data = []
+            # ingredients_data = []
             try:
-                ingredients = Ingredient.objects.filter(id__in=ingredients_set)
+                Ingredient.objects.filter(id__in=ingredients_set)
                 # ingredients_set.add(
                 #     {'ingredient': ingredients.get(pk=ingredient['id']),
                 #      'amount': ingredient['amount']})
