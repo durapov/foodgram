@@ -51,40 +51,29 @@ class IngredientInRecipeSerializer(ModelSerializer):
         min_value=MIN_INGREDIENTS,
         max_value=MAX_INGREDIENTS
     )
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit')
 
     class Meta:
         model = IngredientInRecipe
-        fields = ('recipe', 'ingredient', 'amount')
-
-    def to_representation(self, instance):
-        print('-----ingr-in-rec-ser-to-repr:', instance)
-        representation = super().to_representation(instance)
-        new_rep = {
-            'id': instance.id,
-            'name': instance.ingredient.name,
-            'measurement_unit': instance.ingredient.measurement_unit,
-            'amount': representation['amount']
-        }
-        return new_rep
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
-    # ingredients = IngredientInRecipeSerializer(many=True,
-    #                                            read_only=True).data
+    ingredients = IngredientInRecipeSerializer(many=True,
+                                               source='recipes_ingredients')
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     def to_representation(self, instance):
-        print('-----to_repres_Get_ser inst:', instance)
         data = super().to_representation(instance)
-        print('-----to_repres_Get_ser data:', data)
         ingredients = instance.recipes_ingredients.all()
-        print('-----to_repres_Get_ser::', ingredients)
         data['ingredients'] = IngredientInRecipeSerializer(ingredients,
                                                            many=True).data
-        print('-----to_repGet data:  ', data)
         return data
 
     def get_is_favorited(self, obj):
@@ -119,24 +108,11 @@ class RecipeWriteSerializer(RecipeGetSerializer):
         min_value=MIN_COOKING_TIME,
         max_value=MAX_COOKING_TIME
     )
-
-    # ingredients = IngredientInRecipeSerializer(many=True, required=True).data
-
-    # def to_representation(self, instance):
-    #     print('=====to_repres_Write_ser inst:', instance)
-    #     data = super().to_representation(instance)
-    #     print('=====to_repres_Write_ser data:', data)
-    #     ingredients = instance.recipes_ingredients.all().data
-    #     print('=====to_repres_Write_ser ingr:', ingredients)
-    #     data['ingredients'] = ingredients.all()
-    #     return data
+    ingredients = IngredientInRecipeSerializer(many=True,
+                                               source='recipes_ingredients')
 
     def validate(self, data):
-        print('-----data for validate:', data)
-        print('-----initial_data for validate:', self.initial_data)
-        data = self.initial_data
-        data1 = super().validate(data)
-
+        data = super().validate(self.initial_data)
         request = self.context['request']
         get_tags = request.data.get('tags')
         if not get_tags:
@@ -163,44 +139,26 @@ class RecipeWriteSerializer(RecipeGetSerializer):
                 raise serializers.ValidationError(
                     {'ingredients': ['Такой id занят.']})
             ingredients_set.add(ingredient['id'])
-
-            # ingredients_data = []
             try:
-                Ingredient.objects.filter(id__in=ingredients_set)
-                # ingredients_set.add(
-                #     {'ingredient': ingredients.get(pk=ingredient['id']),
-                #      'amount': ingredient['amount']})
-            except Ingredient.DoesNotExist:
+                Ingredient.objects.get(id=ingredient['id'])
+            except Ingredient.DoesNotExist as error:
                 raise serializers.ValidationError(
                     {'ingredients': ['Такого ингредиента нет.']})
-        print('-----Vlidation end:', data)
-        return data1
+        return data
 
     def validate_image(self, value):
-        print('-----validate_image')
         if not value:
             raise serializers.ValidationError({'image': 'Обязательное поле.'})
         return value
 
     def create_ingredients(self, data, recipe):
-        print('-----data-create-ingr:', data, recipe)
         ingredients_data = {}
         for ingredient_data in data:
             ingredient = ingredient_data['id']
             amount = ingredient_data['amount']
-            print('-----ingr-amount1:', ingredient)
-            print('-----ingr-amount2:', amount)
-            #
-            # ingredients_data.update({'ingredient': int(amount)})
-            # ingredients_data[ingredient] = ingredient,
-            # ingredients_data[amount] = amount
-        print('-----Create IngrInRec IngrData:', ingredients_data)
-        print('-----Create IngrInRec:')
         IngredientInRecipe.objects.bulk_create(
             [IngredientInRecipe(recipe=recipe, ingredient=ingredient)
-             for ingredient, amount in ingredients_data.items()],
-        )
-        print('-----InInRecALL:', IngredientInRecipe.objects.all())
+             for ingredient, amount in ingredients_data.items()], )
         return recipe
 
     @transaction.atomic
@@ -214,35 +172,20 @@ class RecipeWriteSerializer(RecipeGetSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        print('-----validated_data:', validated_data)
         validated_data.pop('is_favorited', None)
         validated_data.pop('is_in_shopping_cart', None)
         tags_data = validated_data.pop('tags')
         ingredients_data = validated_data.pop('ingredients')
-        # if ingredients_data:
-        #     raise serializers.ValidationError(
-        #         {'tags': ['Обязательное поле.']})
-        # recipe = Recipe.objects.create(**validated_data)
-        print('-----ingr-data', ingredients_data)
-        print('-----val-data', validated_data)
         recipe = Recipe.objects.create(**validated_data)
-        # recipe = self.create_ingredients(ingredients_data, recipe)
 
         for ingredient_data in ingredients_data:
             ingredient_id = ingredient_data['id']
             ingredient = Ingredient.objects.get(pk=ingredient_id)
-            print('-----ingr ', ingredient)
             amount = ingredient_data['amount']
-            print('-----ingr-amount:', amount)
-            print('---------IngredientInRecipe.objects.create:')
             IngredientInRecipe.objects.create(recipe=recipe,
                                               ingredient=ingredient,
                                               amount=amount)
-        print('------after cycle', IngredientInRecipe.objects.all())
-
-        #
         recipe.tags.set(tags_data)
-        print('--------recipe', recipe)
         return recipe
 
 

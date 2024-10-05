@@ -204,6 +204,7 @@ class Recipe(models.Model):
 
     tags = models.ManyToManyField(
         Tag,
+        related_name='tag_recipes',
         verbose_name='Тэги'
     )
     pub_date = models.DateTimeField(

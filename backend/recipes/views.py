@@ -71,7 +71,6 @@ class RecipeViewSet(ModelViewSet):
     pk_url_kwarg = 'pk'
 
     def get_queryset(self):
-        print('==============get_queryset', self)
         user = self.request.user
         if user.is_authenticated:
             favorites = user.favorite_users.filter(
@@ -86,11 +85,9 @@ class RecipeViewSet(ModelViewSet):
                 is_subscribed=Exists(subscribers)
             )
         result = super().get_queryset()
-        print('===get_queryset====queryset', result)
         return super().get_queryset()
 
     def get_serializer_class(self):
-        print('==========get_ser_class', self)
         if self.action in ['shopping_cart', 'download_shopping_cart']:
             return ShoppingListSerializer
         if self.action == 'favorite':
@@ -99,20 +96,13 @@ class RecipeViewSet(ModelViewSet):
             return RecipeGetSerializer
         if self.request.method == 'PATCH':
             return RecipeWriteSerializer
-        a = super().get_serializer_class()
-        print('=======get-ser End. Default:', a)
         return super().get_serializer_class()
 
     def perform_create(self, serializer):
-        print('============perform_create', self, serializer)
-        print('========req-data', self.request.data)
         serializer.save(author=self.request.user)
-        print('=====Author Serializer:', serializer)
 
     def recipe_post(self):
-        print('===========recipe_post', self)
         request_user = self.request.user
-        print('+++++request_user', request_user)
         get_recipe = get_object_or_404(Recipe,
                                        pk=self.kwargs[self.pk_url_kwarg])
         serializer = self.get_serializer(data=self.request.data)
@@ -161,7 +151,6 @@ class RecipeViewSet(ModelViewSet):
 
     @action(methods=['get'], detail=True, url_path='get-link')
     def get_link(self, request, pk=None):
-        print('===get_link', request)
         get_recipe = self.get_object()
         base_url = request.get_host()
         short_link = f'https://{base_url}/s/{get_recipe.short_link}'
@@ -254,7 +243,6 @@ class UserViewSet(DjoserUserViewSet):
 
 def get_recipe_short_link(request, short_link):
     """Получить короткую ссылку на рецепт"""
-    print('-----get-link request:', request)
     base_url = request.get_host()
     get_recipe = get_object_or_404(Recipe.objects, short_link=short_link)
     return redirect(f'http://{base_url}/recipes/{get_recipe.pk}')
