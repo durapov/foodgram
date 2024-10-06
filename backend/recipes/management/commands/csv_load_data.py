@@ -1,41 +1,34 @@
 import csv
+import json
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 from django.db import models, transaction
-
-print('begin')
+from recipes.models import Ingredient
 
 
 def import_data(model_name, csv_file_path):
     if model_name == 'User':
         model_class = get_user_model()
+        print('1')
     else:
         model_class = apps.get_model(
             app_label='recipes', model_name=model_name
         )
+        print('2')
     if model_class is None:
+        print('3')
         raise CommandError('Модель не существует.')
 
     with transaction.atomic():
-        with open(csv_file_path, 'r', encoding='utf-8-sig') as csvfile:
-            file_data = csv.DictReader(csvfile)
-            for item in file_data:
-                data = model_class(**item)
-                for field_name, value in item.items():
-                    if hasattr(data, field_name) and isinstance(
-                            getattr(data, field_name), models.ForeignKey):
-                        related_model = apps.get_model(
-                            app_label='recipes',
-                            model_name=data._meta.get_field(
-                                field_name
-                            ).related_model
-                        )
-                        related_object = related_model.objects.get(pk=value)
-                        setattr(data, field_name, related_object)
-                data.full_clean()
-                data.save()
+        with open(csv_file_path, 'r', encoding='utf-8-sig') as data:
+            for row in json.load(data):
+                ingredient = Ingredient(
+                    name=row['name'].capitalize(),
+                    measurement_unit=row['measurement_unit']
+                )
+                ingredient.save()
 
 
 class Command(BaseCommand):
@@ -49,6 +42,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE(f'Импорт из файла {file}'))
         try:
             import_data(model, file)
+            self.stdout.write(self.style.SUCCESS('выполнен импорт'))
         except Exception as exception:
             self.stdout.write(
                 self.style.ERROR(f'Ошибка импорта:\n{exception}.'))
