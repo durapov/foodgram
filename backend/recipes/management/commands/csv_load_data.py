@@ -1,4 +1,3 @@
-import csv
 import json
 
 from django.apps import apps
@@ -11,14 +10,11 @@ from recipes.models import Ingredient
 def import_data(model_name, csv_file_path):
     if model_name == 'User':
         model_class = get_user_model()
-        print('1')
     else:
         model_class = apps.get_model(
             app_label='recipes', model_name=model_name
         )
-        print('2')
     if model_class is None:
-        print('3')
         raise CommandError('Модель не существует.')
 
     with transaction.atomic():
@@ -42,7 +38,6 @@ class Command(BaseCommand):
         self.stdout.write(self.style.NOTICE(f'Импорт из файла {file}'))
         try:
             import_data(model, file)
-            self.stdout.write(self.style.SUCCESS('выполнен импорт'))
         except Exception as exception:
             self.stdout.write(
                 self.style.ERROR(f'Ошибка импорта:\n{exception}.'))
