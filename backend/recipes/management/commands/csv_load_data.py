@@ -16,15 +16,16 @@ def import_data(model_name, csv_file_path):
         )
     if model_class is None:
         raise CommandError('Модель не существует.')
+    print('1212313')
 
-    with transaction.atomic():
-        with open(csv_file_path, 'r', encoding='utf-8-sig') as data:
-            for row in json.load(data):
-                ingredient = Ingredient(
-                    name=row['name'].capitalize(),
-                    measurement_unit=row['measurement_unit']
-                )
-                ingredient.save()
+    # with transaction.atomic():
+    #     with open(csv_file_path, 'r', encoding='utf-8-sig') as data:
+    #         for row in json.load(data):
+    #             ingredient = Ingredient(
+    #                 name=row['name'].capitalize(),
+    #                 measurement_unit=row['measurement_unit']
+    #             )
+    #             ingredient.save()
 
 
 class Command(BaseCommand):
