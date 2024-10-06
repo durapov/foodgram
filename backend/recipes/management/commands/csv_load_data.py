@@ -3,7 +3,7 @@ import json
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
-from django.db import models, transaction
+from django.db import transaction
 from recipes.models import Ingredient
 
 
