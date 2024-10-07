@@ -62,7 +62,7 @@
 
 команда для загрузки:
 sudo docker compose -f docker-compose.production.yml exec backend python
-manage.py csv_load_data ~/foodgram/data/ingredients.json Ingredient
+manage.py csv_load_data /app/data/ingredients.json Ingredient
 
 ## Автор
 
