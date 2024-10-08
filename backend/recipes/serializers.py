@@ -24,7 +24,10 @@ class UserSerializer(UserCreateSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
     def get_is_subscribed(self, obj):
-        return getattr(obj, 'is_subscribed', False)
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return user.subscription_author.filter(subscriber=obj).exists()
 
     class Meta:
         model = User
@@ -191,9 +194,15 @@ class UserWithRecipeSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     avatar = Base64ImageField()
-    is_subscribed = serializers.BooleanField(default=False)
+    is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        if user.is_anonymous:
+            return False
+        return user.subscription_author.filter(subscriber=obj).exists()
 
     def get_recipes_count(self, obj):
         return obj.recipe.all().count()
@@ -237,7 +246,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscribe
         fields = ('subscriber',)
-        read_only_fields = ('user', 'subscriber')
+        # read_only_fields = ('user', 'subscriber')
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):

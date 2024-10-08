@@ -182,7 +182,7 @@ class Recipe(models.Model):
     text = models.TextField(
         verbose_name='Описание рецепта'
     )
-    image = models.FileField(
+    image = models.ImageField(
         max_length=IMAGE_LENGTH,
         verbose_name='Изображение рецепта',
         upload_to='recipes/',
