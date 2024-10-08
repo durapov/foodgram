@@ -9,7 +9,7 @@ from django.utils.translation import gettext_lazy
 from rest_framework.exceptions import ValidationError
 from backend.constants import (EMAIL_LENGTH, INGREDIENT_LENGTH,
                                MAX_COOKING_TIME, MAX_INGREDIENTS,
-                               MEASURMENT_LENGTH, IMAGE_LENGTH,
+                               MEASURMENT_LENGTH,
                                MIN_COOKING_TIME, MIN_INGREDIENTS, NAME_LENGTH,
                                RECIPE_LENGTH, RECIPE_SHORT_LENGTH,
                                ROLE_LENGTH, SLUG_LENGTH, TAG_LENGTH)
