@@ -9,7 +9,8 @@ from rest_framework.serializers import ModelSerializer
 from .models import (Favorite, Ingredient, IngredientInRecipe, Recipe,
                      ShoppingList, Subscribe, Tag, User)
 from backend.constants import (MAX_COOKING_TIME, MAX_INGREDIENTS,
-                               MIN_COOKING_TIME, MIN_INGREDIENTS, )
+                               MIN_COOKING_TIME, MIN_INGREDIENTS,
+                               MAX_IMAGE_LENGTH)
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
@@ -100,7 +101,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(RecipeGetSerializer):
-    image = Base64ImageField(required=True, max_length=None)
+    image = Base64ImageField(required=True, max_length=MAX_IMAGE_LENGTH)
     is_favorited = serializers.BooleanField(default=False)
     is_in_shopping_cart = serializers.BooleanField(default=False)
     cooking_time = serializers.IntegerField(
