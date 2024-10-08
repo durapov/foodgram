@@ -58,11 +58,29 @@
 Проект пройдёт встроенные тесты, создадутся необходимые файлы на сервере в
 директории ~/foodgram, будут запущены необходимые контейнеры
 
+выполнить миграции и собрать статику
+sudo docker compose -f docker-compose.production.yml exec backend python
+manage.py makemigrations
+sudo docker compose -f docker-compose.production.yml exec backend python
+manage.py migrate
+sudo docker compose -f docker-compose.production.yml exec backend python
+manage.py collectstatic
+sudo docker compose -f docker-compose.production.yml exec backend cp -r
+/app/collected_static/. /backend_static/static/
+
 #### 5. Создать ингредиенты, или загрузить из файла в папке data
 
-команда для загрузки:
-sudo docker compose -f docker-compose.production.yml exec backend python
-manage.py csv_load_data /app/recipes/management/ingredients.json Ingredient
+команда для загрузки (в одну строку):
+
+1) sudo docker compose -f docker-compose.production.yml exec backend python
+   manage.py csv_load_data /app/recipes/management/ingredients.json Ingredient
+
+#### 6. Создать суперюзера
+
+1) sudo docker compose -f docker-compose.production.yml exec -it backend
+   python manage.py shell
+2) from recipes.models import User; User.objects.create_superuser('
+   superuser', 'email', 'пароль')
 
 ## Автор
 
