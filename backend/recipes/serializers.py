@@ -2,7 +2,7 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer
-from drf_extra_fields.fields import Base64ImageField
+from .fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
@@ -103,7 +103,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(RecipeGetSerializer):
-    image = Base64ImageField(required=True)
+    image = Base64ImageField(required=False)
     is_favorited = serializers.BooleanField(default=False)
     is_in_shopping_cart = serializers.BooleanField(default=False)
     cooking_time = serializers.IntegerField(
