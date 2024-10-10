@@ -2,7 +2,7 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer
-from .fields import Base64ImageField
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.serializers import ModelSerializer
 
@@ -115,7 +115,10 @@ class RecipeWriteSerializer(RecipeGetSerializer):
                                                source='recipes_ingredients')
 
     def validate(self, data):
+        print('++data', data)
+        print('++init_data', self.initial_data)
         data = super().validate(self.initial_data)
+        data.pop('image')
         request = self.context['request']
         get_tags = request.data.get('tags')
         if not get_tags:
@@ -147,6 +150,7 @@ class RecipeWriteSerializer(RecipeGetSerializer):
             except Ingredient.DoesNotExist:
                 raise serializers.ValidationError(
                     {'ingredients': ['Такого ингредиента нет.']})
+        print('===data', data)
         return data
 
     def validate_image(self, value):
@@ -168,8 +172,11 @@ class RecipeWriteSerializer(RecipeGetSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        print('----val-data-', validated_data)
         instance.ingredients.clear()
         instance.tags.set(validated_data.pop('tags'))
+        # instance.image = validated_data.get('image', instance.image)
+        # print('---1', instance)
         self.create_ingredients(validated_data.pop('ingredients'),
                                 recipe=instance)
         validated_data['is_favorited'] = self.get_is_favorited(instance)
@@ -177,10 +184,14 @@ class RecipeWriteSerializer(RecipeGetSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        print('----val-data-', validated_data)
         validated_data.pop('is_favorited', None)
         validated_data.pop('is_in_shopping_cart', None)
         tags_data = validated_data.pop('tags')
+        print('---', validated_data)
         ingredients_data = validated_data.pop('ingredients')
+        # image_data = validated_data.pop('image')
+        # image = super().to_internal_value(self, image_data)
         recipe = Recipe.objects.create(**validated_data)
         self.create_ingredients(ingredients_data, recipe)
         recipe.tags.set(tags_data)
