@@ -181,8 +181,6 @@ class RecipeWriteSerializer(RecipeGetSerializer):
         validated_data.pop('is_in_shopping_cart', None)
         tags_data = validated_data.pop('tags')
         ingredients_data = validated_data.pop('ingredients')
-        print("----val", validated_data)
-        # image = validated_data.pop('image')
         recipe = Recipe.objects.create(**validated_data)
         self.create_ingredients(ingredients_data, recipe)
         recipe.tags.set(tags_data)
