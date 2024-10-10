@@ -191,7 +191,7 @@ class RecipeWriteSerializer(RecipeGetSerializer):
         validated_data.pop('is_favorited', None)
         validated_data.pop('is_in_shopping_cart', None)
         tags_data = validated_data.pop('tags')
-        ingredients_data = validated_data.pop('recipes_ingredients')
+        validated_data.pop('recipes_ingredients')
         recipe = Recipe.objects.create(**validated_data)
         ingredients = self.initial_data.get('ingredients')
         self.create_ingredients(ingredients, recipe)
