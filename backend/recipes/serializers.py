@@ -66,7 +66,9 @@ class IngredientInRecipeSerializer(ModelSerializer):
 
 class RecipeGetSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
-    tags = TagSerializer(read_only=True, many=True)
+    tags = TagSerializer(many=True)
+    # tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
+    #                                           many=True)
     ingredients = IngredientInRecipeSerializer(many=True,
                                                source='recipes_ingredients')
     is_favorited = serializers.SerializerMethodField()
@@ -103,7 +105,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
 
 
 class RecipeWriteSerializer(RecipeGetSerializer):
-    image = Base64ImageField(required=False)
+    image = Base64ImageField(required=True)
     is_favorited = serializers.BooleanField(default=False)
     is_in_shopping_cart = serializers.BooleanField(default=False)
     cooking_time = serializers.IntegerField(
@@ -114,11 +116,14 @@ class RecipeWriteSerializer(RecipeGetSerializer):
     ingredients = IngredientInRecipeSerializer(many=True,
                                                source='recipes_ingredients')
 
+    #
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
+                                              many=True)
+
+    # tags = TagSerializer(many=True)
+
     def validate(self, data):
-        print('++data', data)
-        print('++init_data', self.initial_data)
-        data = super().validate(self.initial_data)
-        data.pop('image')
+        data = super().validate(data)
         request = self.context['request']
         get_tags = request.data.get('tags')
         if not get_tags:
@@ -150,7 +155,6 @@ class RecipeWriteSerializer(RecipeGetSerializer):
             except Ingredient.DoesNotExist:
                 raise serializers.ValidationError(
                     {'ingredients': ['Такого ингредиента нет.']})
-        print('===data', data)
         return data
 
     def validate_image(self, value):
@@ -172,28 +176,25 @@ class RecipeWriteSerializer(RecipeGetSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        print('----val-data-', validated_data)
+        validated_data.pop('recipes_ingredients')
+        tags_data = validated_data.pop('tags')
+        super().update(instance, validated_data)
+        instance.tags.set(tags_data)
         instance.ingredients.clear()
-        instance.tags.set(validated_data.pop('tags'))
-        # instance.image = validated_data.get('image', instance.image)
-        # print('---1', instance)
-        self.create_ingredients(validated_data.pop('ingredients'),
-                                recipe=instance)
+        ingredients = self.initial_data.get('ingredients')
+        self.create_ingredients(ingredients, instance)
         validated_data['is_favorited'] = self.get_is_favorited(instance)
-        return super().update(instance, validated_data)
+        return instance
 
     @transaction.atomic
     def create(self, validated_data):
-        print('----val-data-', validated_data)
         validated_data.pop('is_favorited', None)
         validated_data.pop('is_in_shopping_cart', None)
         tags_data = validated_data.pop('tags')
-        print('---', validated_data)
-        ingredients_data = validated_data.pop('ingredients')
-        # image_data = validated_data.pop('image')
-        # image = super().to_internal_value(self, image_data)
+        ingredients_data = validated_data.pop('recipes_ingredients')
         recipe = Recipe.objects.create(**validated_data)
-        self.create_ingredients(ingredients_data, recipe)
+        ingredients = self.initial_data.get('ingredients')
+        self.create_ingredients(ingredients, recipe)
         recipe.tags.set(tags_data)
         return recipe
 
