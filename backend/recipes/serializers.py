@@ -75,6 +75,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     def to_representation(self, instance):
+        print('--33--', instance.__dict__)
         data = super().to_representation(instance)
         ingredients = instance.recipes_ingredients.all()
         data['ingredients'] = IngredientInRecipeSerializer(ingredients,
@@ -183,7 +184,6 @@ class RecipeWriteSerializer(RecipeGetSerializer):
         instance.ingredients.clear()
         ingredients = self.initial_data.get('ingredients')
         self.create_ingredients(ingredients, instance)
-        validated_data['is_favorited'] = self.get_is_favorited(instance)
         return instance
 
     @transaction.atomic
@@ -197,6 +197,12 @@ class RecipeWriteSerializer(RecipeGetSerializer):
         self.create_ingredients(ingredients, recipe)
         recipe.tags.set(tags_data)
         return recipe
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['tags'] = TagSerializer(instance.tags.all(), many=True).data
+        data['is_favorited'] = self.get_is_favorited(instance)
+        return data
 
 
 class UserWithRecipeSerializer(serializers.Serializer):
