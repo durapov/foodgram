@@ -148,11 +148,10 @@ class RecipeViewSet(ModelViewSet):
         return self.recipe_delete(Favorite.objects)
 
     @action(methods=['get'], detail=True, url_path='get-link')
-    def get_link(self, request, pk=None):
-        get_recipe = self.get_object()
-        base_url = request.get_host()
-        short_link = f'http://{base_url}/recipes/{get_recipe.pk}'
-        return Response({'short-link': short_link})
+    def get_link(self, request, pk):
+        get_object_or_404(Recipe, id=pk)
+        url = request.build_absolute_uri(f'/recipes/{pk}/')
+        return Response({'short-link': url}, status=status.HTTP_200_OK)
 
 
 class UserViewSet(DjoserUserViewSet):
