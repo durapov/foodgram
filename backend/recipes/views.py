@@ -147,7 +147,7 @@ class RecipeViewSet(ModelViewSet):
     def delete_favorite(self, request, pk=None):
         return self.recipe_delete(Favorite.objects)
 
-    @action(methods=['get'], detail=True, url_path='get-link')
+    @action(methods=['GET'], detail=True, url_path='get-link')
     def get_link(self, request, pk):
         get_object_or_404(Recipe, id=pk)
         url = request.build_absolute_uri(f'/recipes/{pk}/')
