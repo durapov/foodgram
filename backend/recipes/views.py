@@ -61,7 +61,8 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    queryset = Recipe.objects.prefetch_related('author', 'ingredients', 'tags')
+    queryset = Recipe.objects.prefetch_related('author', 'ingredients',
+                                               'tags')
     permission_classes = [IsAuthenticatedOrReadOnly, CustomPermission]
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
@@ -150,7 +151,7 @@ class RecipeViewSet(ModelViewSet):
     def get_link(self, request, pk=None):
         get_recipe = self.get_object()
         base_url = request.get_host()
-        short_link = f'https://{base_url}/s/{get_recipe.short_link}'
+        short_link = f'http://{base_url}/recipes/{get_recipe.pk}'
         return Response({'short-link': short_link})
 
 
@@ -236,13 +237,6 @@ class UserViewSet(DjoserUserViewSet):
         if self.action == 'create':
             return CustomUserCreateSerializer
         return UserSerializer
-
-
-def get_recipe_short_link(request, short_link):
-    """Получить короткую ссылку на рецепт"""
-    base_url = request.get_host()
-    get_recipe = get_object_or_404(Recipe.objects, short_link=short_link)
-    return redirect(f'http://{base_url}/recipes/{get_recipe.pk}')
 
 
 def get_shop_list(user):

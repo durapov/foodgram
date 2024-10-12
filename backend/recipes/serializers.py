@@ -67,15 +67,12 @@ class IngredientInRecipeSerializer(ModelSerializer):
 class RecipeGetSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True)
-    # tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
-    #                                           many=True)
     ingredients = IngredientInRecipeSerializer(many=True,
                                                source='recipes_ingredients')
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
 
     def to_representation(self, instance):
-        print('--33--', instance.__dict__)
         data = super().to_representation(instance)
         ingredients = instance.recipes_ingredients.all()
         data['ingredients'] = IngredientInRecipeSerializer(ingredients,
@@ -116,12 +113,8 @@ class RecipeWriteSerializer(RecipeGetSerializer):
     )
     ingredients = IngredientInRecipeSerializer(many=True,
                                                source='recipes_ingredients')
-
-    #
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                               many=True)
-
-    # tags = TagSerializer(many=True)
 
     def validate(self, data):
         data = super().validate(data)
@@ -264,7 +257,6 @@ class SubscribeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscribe
         fields = ('subscriber',)
-        # read_only_fields = ('user', 'subscriber')
 
 
 class ShortRecipeSerializer(serializers.ModelSerializer):

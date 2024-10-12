@@ -26,7 +26,7 @@ class RecipeFilter(FilterSet):
             return queryset
         get_tags = [
             tag_value for tag_value in self.request.GET.getlist('tags')]
-        queryset = queryset.filter(tags__slug__in=get_tags)
+        queryset = queryset.filter(tags__slug__in=get_tags).distinct()
         return queryset
 
     def filter_is_favorited(self, queryset, name, value):

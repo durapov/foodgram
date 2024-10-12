@@ -4,15 +4,15 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import CheckConstraint, UniqueConstraint
-from django.utils.text import slugify
 from django.utils.translation import gettext_lazy
 from rest_framework.exceptions import ValidationError
+
 from backend.constants import (EMAIL_LENGTH, INGREDIENT_LENGTH,
                                MAX_COOKING_TIME, MAX_INGREDIENTS,
                                MEASURMENT_LENGTH,
                                MIN_COOKING_TIME, MIN_INGREDIENTS, NAME_LENGTH,
-                               RECIPE_LENGTH, RECIPE_SHORT_LENGTH,
-                               ROLE_LENGTH, SLUG_LENGTH, TAG_LENGTH)
+                               RECIPE_LENGTH, ROLE_LENGTH, SLUG_LENGTH,
+                               TAG_LENGTH)
 
 
 def user_validator(value):
@@ -213,16 +213,6 @@ class Recipe(models.Model):
         verbose_name='Дата публикации',
         auto_now_add=True
     )
-    short_link = models.SlugField(
-        unique=True,
-        blank=True,
-    )
-
-    def save(self, *args, **kwargs):
-        if not self.short_link:
-            self.short_link = slugify(
-                self.name, allow_unicode=True)[:RECIPE_SHORT_LENGTH]
-        super().save(*args, **kwargs)
 
     class Meta:
         ordering = ('-pub_date',)
