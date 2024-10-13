@@ -74,8 +74,8 @@ sudo docker compose -f docker-compose.production.yml exec backend cp -r
 
 #### 6. Создать суперюзера
 
-1) sudo docker compose -f docker-compose.production.yml exec -it backend
-   python manage.py shell
+1) sudo docker compose -f docker-compose.production.yml exec -it backend python
+   manage.py shell
 2) from recipes.models import User; User.objects.create_superuser('
    superuser', 'email', 'пароль')
 
